@@ -1,0 +1,59 @@
+name: Update cask
+
+# Keeps Casks/glanceterm.rb in sync with the latest STABLE GlanceTerm release.
+# Runs daily and on demand. Until a stable (non-prerelease, non-draft) release
+# exists it no-ops, leaving the hand-pinned test build in place. Commits to this
+# repo with the built-in GITHUB_TOKEN — no extra secrets needed.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync cask to the latest stable GlanceTerm release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          REPO=jessemaxh/GlanceTerm
+
+          # `gh release view` with no tag = the latest stable release (excludes
+          # prereleases/drafts). Empty until the first stable release ships.
+          tag=$(gh release view -R "$REPO" --json tagName -q .tagName 2>/dev/null || true)
+          if [ -z "$tag" ]; then
+            echo "No stable release yet — leaving the pinned test build."
+            exit 0
+          fi
+
+          dmg=$(gh release view "$tag" -R "$REPO" --json assets -q '.assets[].name' \
+                | grep -E 'macos-arm64\.dmg$' | head -1 || true)
+          if [ -z "$dmg" ]; then
+            echo "No arm64 dmg asset in $tag."
+            exit 0
+          fi
+
+          ver=$(echo "$dmg" | sed -E 's/^GlanceTerm-(.*)-macos-arm64\.dmg$/\1/')
+          url="https://github.com/$REPO/releases/download/$tag/$dmg"
+          sha=$(curl -fsSL "$url" | sha256sum | awk '{print $1}')
+
+          sed -i -E "s|^  version \".*\"|  version \"$ver\"|"  Casks/glanceterm.rb
+          sed -i -E "s|^  sha256 \".*\"|  sha256 \"$sha\"|"    Casks/glanceterm.rb
+          sed -i -E "s|^  url \".*\"|  url \"$url\"|"          Casks/glanceterm.rb
+
+          if git diff --quiet; then
+            echo "Cask already up to date ($ver)."
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -am "chore: glanceterm $ver"
+            git push
+          fi
