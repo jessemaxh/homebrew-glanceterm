@@ -2,10 +2,10 @@ cask "glanceterm" do
   # version / sha256 / url are kept in sync with the latest stable GlanceTerm
   # release by .github/workflows/update-cask.yml. Currently pinned to the
   # v0.0.0-citest test build until the first stable release ships.
-  version "0.3.1"
-  sha256 "91f56613778aada598dcf766aa6ad1ea332e1948a40ceb8edd0a27114c7191c6"
+  version "0.3.2"
+  sha256 "73a28f2f0f92f25707f1f4d57db1e4304f9c7349469d9846ac9cc55f09efa360"
 
-  url "https://github.com/jessemaxh/GlanceTerm/releases/download/v0.3.1/GlanceTerm-0.3.1-macos-arm64.dmg"
+  url "https://github.com/jessemaxh/GlanceTerm/releases/download/v0.3.2/GlanceTerm-0.3.2-macos-arm64.dmg"
   name "GlanceTerm"
   desc "Terminal with a sidebar for managing many AI coding agents at once"
   homepage "https://github.com/jessemaxh/GlanceTerm"
