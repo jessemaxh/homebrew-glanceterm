@@ -1,13 +1,13 @@
 name: Update cask
 
 # Keeps Casks/glanceterm.rb in sync with the latest STABLE GlanceTerm release.
-# Runs daily and on demand. Until a stable (non-prerelease, non-draft) release
+# Runs hourly and on demand. Until a stable (non-prerelease, non-draft) release
 # exists it no-ops, leaving the hand-pinned test build in place. Commits to this
 # repo with the built-in GITHUB_TOKEN — no extra secrets needed.
 
 on:
   schedule:
-    - cron: "0 6 * * *"
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 permissions:
