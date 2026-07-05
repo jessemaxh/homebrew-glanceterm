@@ -43,7 +43,16 @@ jobs:
 
           ver=$(echo "$dmg" | sed -E 's/^GlanceTerm-(.*)-macos-arm64\.dmg$/\1/')
           url="https://github.com/$REPO/releases/download/$tag/$dmg"
-          sha=$(curl -fsSL "$url" | sha256sum | awk '{print $1}')
+          # sha256 straight from the GitHub API asset `digest` (e.g. "sha256:5bb…")
+          # — NO dmg download, so this hourly job neither inflates the release
+          # download count nor wastes ~150 MB of transfer per run.
+          sha=$(gh api "repos/$REPO/releases/tags/$tag" \
+                  --jq ".assets[] | select(.name==\"$dmg\") | .digest" \
+                | sed 's/^sha256://')
+          if [ -z "$sha" ]; then
+            echo "No sha256 digest for $dmg."
+            exit 0
+          fi
 
           sed -i -E "s|^  version \".*\"|  version \"$ver\"|"  Casks/glanceterm.rb
           sed -i -E "s|^  sha256 \".*\"|  sha256 \"$sha\"|"    Casks/glanceterm.rb
